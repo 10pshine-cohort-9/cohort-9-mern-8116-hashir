@@ -1,12 +1,22 @@
 const userModel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const tokenBlacklistModel = require("../models/blacklist.model");
 const logger = require("../logger/logger");
 
+
+function hashToken(token) {
+  return crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+}
+
+
 /**
  * @name registerUserController
- * @description Register a new user, expects username, email and password in the request body
+ * @description Register a new user
  * @access public
  */
 
@@ -20,9 +30,11 @@ async function registerUserController(req, res, next) {
       });
     }
 
+
     const isUserAlreadyExists = await userModel.findOne({
       $or: [{ username }, { email }],
     });
+
 
     if (isUserAlreadyExists) {
       return res.status(400).json({
@@ -30,7 +42,9 @@ async function registerUserController(req, res, next) {
       });
     }
 
+
     const hash = await bcrypt.hash(password, 10);
+
 
     const user = await userModel.create({
       username,
@@ -38,11 +52,18 @@ async function registerUserController(req, res, next) {
       password: hash,
     });
 
+
     const token = jwt.sign(
-      { id: user._id, username: user.username },
+      {
+        id: user._id,
+        username: user.username,
+      },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "1d" }
+      {
+        expiresIn: "1d",
+      }
     );
+
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -51,8 +72,9 @@ async function registerUserController(req, res, next) {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    // Avoid logging sensitive user information
+
     logger.info("New user registered");
+
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -62,20 +84,26 @@ async function registerUserController(req, res, next) {
         email: user.email,
       },
     });
+
+
   } catch (error) {
     next(error);
   }
 }
 
+
+
 /**
  * @name loginUserController
- * @description Login a user, expects email and password in the request body
+ * @description Login user
  * @access public
  */
 
 async function loginUserController(req, res, next) {
   try {
+
     const { email, password } = req.body;
+
 
     if (!email || !password) {
       return res.status(400).json({
@@ -83,7 +111,9 @@ async function loginUserController(req, res, next) {
       });
     }
 
+
     const user = await userModel.findOne({ email });
+
 
     if (!user) {
       logger.warn("Failed login attempt");
@@ -93,10 +123,12 @@ async function loginUserController(req, res, next) {
       });
     }
 
+
     const isPasswordValid = await bcrypt.compare(
       password,
       user.password
     );
+
 
     if (!isPasswordValid) {
       logger.warn("Failed login attempt");
@@ -106,11 +138,18 @@ async function loginUserController(req, res, next) {
       });
     }
 
+
     const token = jwt.sign(
-      { id: user._id, username: user.username },
+      {
+        id: user._id,
+        username: user.username,
+      },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "1d" }
+      {
+        expiresIn: "1d",
+      }
     );
+
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -119,7 +158,9 @@ async function loginUserController(req, res, next) {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
+
     logger.info("User logged in successfully");
+
 
     return res.status(200).json({
       message: "User loggedIn Successfully",
@@ -129,36 +170,56 @@ async function loginUserController(req, res, next) {
         email: user.email,
       },
     });
+
+
   } catch (error) {
     next(error);
   }
 }
 
+
+
 /**
  * @name logoutUserController
- * @description Clear token from cookie and blacklist token
+ * @description Logout user and blacklist token
  * @access public
  */
 
 async function logoutUserController(req, res, next) {
   try {
+
     const token = req.cookies.token;
 
+
     if (token) {
-      await tokenBlacklistModel.create({ token });
+
+      const hashedToken = hashToken(token);
+
+
+      await tokenBlacklistModel.create({
+        token: hashedToken,
+      });
+
     }
+
 
     res.clearCookie("token");
 
+
     logger.info("User logged out");
+
 
     return res.status(200).json({
       message: "User logout Successfully",
     });
+
+
   } catch (error) {
     next(error);
   }
 }
+
+
 
 /**
  * @name getMeController
@@ -168,7 +229,9 @@ async function logoutUserController(req, res, next) {
 
 async function getMeController(req, res, next) {
   try {
+
     const user = await userModel.findById(req.user.id);
+
 
     if (!user) {
       return res.status(404).json({
@@ -176,7 +239,9 @@ async function getMeController(req, res, next) {
       });
     }
 
+
     logger.info("User profile fetched");
+
 
     return res.status(200).json({
       message: "User details fetched successfully",
@@ -186,10 +251,14 @@ async function getMeController(req, res, next) {
         email: user.email,
       },
     });
+
+
   } catch (error) {
     next(error);
   }
 }
+
+
 
 module.exports = {
   registerUserController,
