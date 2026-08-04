@@ -1,9 +1,12 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
 # Environment variables (MongoDB URI, JWT secrets)
 .env
 .env.*
+**/.env
+**/.env.*
 
 # Logs
 logs/
@@ -15,6 +18,7 @@ yarn-error.log*
 # Build files
 dist/
 build/
+frontend/dist/
 
 # Testing
 coverage/
@@ -22,6 +26,7 @@ coverage/
 # MongoDB local files
 *.db
 *.sqlite
+*.mongodb
 
 # Uploads
 uploads/
