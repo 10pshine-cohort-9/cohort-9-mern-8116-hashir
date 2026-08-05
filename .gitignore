@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/
+frontend/dist/
+
+# Testing
+coverage/
+
+# Database files
+*.db
+*.sqlite
+*.mongodb
+
+# Uploads
+uploads/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Test environment files
+.env.test
+.env.test.*
+**/.env.test
+**/.env.test.*
