@@ -15,7 +15,7 @@ noteRouter.get("/get-notes", authMiddleware.authUser, noteController.getNotes);
 /**
  * @route POST /api/notes/create-note
  * @description creating a note
- * @acess public
+ * @acess private
  */
 noteRouter.post(
   "/create-note",
@@ -26,7 +26,7 @@ noteRouter.post(
 /**
  * @route PUT /api/notes/update-note
  * @description upadting a existing note
- * @acess public
+ * @acess private
  */
 noteRouter.put(
   "/update-note/:id",
@@ -37,7 +37,7 @@ noteRouter.put(
 /**
  * @route DELETE /api/notes/delete-note
  * @description deleting a note
- * @acess public
+ * @acess private
  */
 noteRouter.delete(
   "/delete-note/:id",
