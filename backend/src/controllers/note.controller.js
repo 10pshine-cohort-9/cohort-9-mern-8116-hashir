@@ -22,6 +22,11 @@ async function createNote(req, res) {
   try {
     const { heading, content } = req.body;
 
+    if (typeof heading !== "string" || typeof content !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Handing and content must be valid string" });
+    }
     const note = await Note.create({
       heading,
       content,
@@ -33,47 +38,47 @@ async function createNote(req, res) {
       note,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to create note",
-    });
+    if (error.name === "ValidationError") {
+      res.status(400).json({
+        success: false,
+        message: "Failed to create note",
+      });
+    }
   }
 }
 
 async function updateNote(req, res) {
   try {
+    const { id } = req.params;
     const { heading, content } = req.body;
 
-    const note = await Note.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        user: req.user.id,
-      },
-      {
-        heading,
-        content,
-      },
+    if (
+      (heading !== undefined && typeof heading !== "string") ||
+      (content !== undefined && typeof content !== "string")
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Heading and content must be valid strings." });
+    }
+
+    const updatedNote = await Note.findOneAndUpdate(
+      { _id: id },
+      { heading, content },
       {
         new: true,
+        runValidators: true,
       },
     );
 
-    if (!note) {
-      return res.status(404).json({
-        success: false,
-        message: "Note not found",
-      });
+    if (!updatedNote) {
+      return res.status(404).json({ error: "Note not found." });
     }
 
-    res.status(200).json({
-      success: true,
-      note,
-    });
+    return res.status(200).json(updatedNote);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to update note",
-    });
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ error: error.message });
+    }
   }
 }
 
@@ -96,7 +101,7 @@ async function deleteNote(req, res) {
       message: "Note deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: "Failed to delete the note",
     });
