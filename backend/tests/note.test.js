@@ -15,27 +15,35 @@ let token;
 let noteId;
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI);
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
 
-  await request(app).post("/api/auth/register").send({
-    username: "testuser",
-    email: "test@gmail.com",
-    password: "password123",
-  });
+    await request(app).post("/api/auth/register").send({
+      username: "testuser",
+      email: "test@gmail.com",
+      password: "password123",
+    });
 
-  const response = await request(app).post("/api/auth/login").send({
-    email: "test@gmail.com",
-    password: "password123",
-  });
+    const response = await request(app).post("/api/auth/login").send({
+      email: "test@gmail.com",
+      password: "password123",
+    });
 
-  token = response.headers["set-cookie"][0];
+    token = response.headers["set-cookie"][0];
+  } catch (error) {
+    throw new Error(`Test setup failed: ${error.message}`);
+  }
 });
 
 afterAll(async () => {
-  await noteModel.deleteMany({});
-  await userModel.deleteMany({
-    email: "test@gmail.com",
-  });
+  try {
+    await noteModel.deleteMany({});
+    await userModel.deleteMany({
+      email: "test@gmail.com",
+    });
+  } catch (error) {
+    throw new Error(`Test cleanup failed: ${error.message}`);
+  }
 
   await mongoose.connection.close();
 });
