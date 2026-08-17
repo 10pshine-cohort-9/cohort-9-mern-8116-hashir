@@ -13,23 +13,30 @@ jest.setTimeout(30000);
 
 let token;
 let noteId;
+let testUserId;
+let testEmail;
 
 beforeAll(async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
 
+    testEmail = `test-${Date.now()}@gmail.com`;
+
     await request(app).post("/api/auth/register").send({
       username: "testuser",
-      email: "test@gmail.com",
+      email: testEmail,
       password: "password123",
     });
 
     const response = await request(app).post("/api/auth/login").send({
-      email: "test@gmail.com",
+      email: testEmail,
       password: "password123",
     });
 
     token = response.headers["set-cookie"][0];
+
+    const user = await userModel.findOne({ email: testEmail });
+    testUserId = user._id;
   } catch (error) {
     throw new Error(`Test setup failed: ${error.message}`);
   }
@@ -37,9 +44,12 @@ beforeAll(async () => {
 
 afterAll(async () => {
   try {
-    await noteModel.deleteMany({});
-    await userModel.deleteMany({
-      email: "test@gmail.com",
+    await noteModel.deleteMany({
+      user: testUserId,
+    });
+
+    await userModel.deleteOne({
+      email: testEmail,
     });
   } catch (error) {
     throw new Error(`Test cleanup failed: ${error.message}`);
