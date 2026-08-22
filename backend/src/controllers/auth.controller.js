@@ -159,28 +159,39 @@ async function loginUserController(req, res, next) {
 
 async function logoutUserController(req, res, next) {
   try {
-    const token = req.cookies.token;
+    const token = req.cookies?.token;
 
     if (token) {
-      const hashedToken = hashToken(token);
+      try {
+        jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-      await tokenBlacklistModel.create({
-        token: hashedToken,
-      });
+        const hashedToken = hashToken(token);
+
+        await tokenBlacklistModel.create({
+          token: hashedToken,
+        });
+      } catch (error) {
+        if (error.name !== "TokenExpiredError") {
+          logger.warn("Invalid token supplied during logout");
+        }
+      }
     }
 
-    res.clearCookie("token");
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+    });
 
     logger.info("User logged out");
 
     return res.status(200).json({
-      message: "User logout Successfully",
+      message: "User logout successfully",
     });
   } catch (error) {
     next(error);
   }
 }
-
 /**
  * @name getMeController
  * @description Get current logged-in user
