@@ -9,7 +9,12 @@ const CreateNote = () => {
   };
 
   return (
-    <button className="create-note-btn" onClick={handleCreateNote}>
+    <button
+      type="button"
+      className="create-note-btn"
+      onClick={handleCreateNote}
+      aria-label="Create a new note"
+    >
       <Plus size={20} />
       <span>Create Note</span>
     </button>
