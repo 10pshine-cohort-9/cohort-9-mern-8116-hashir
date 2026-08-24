@@ -1,10 +1,10 @@
 import NoteCard from "./NoteCard";
 
-const NotesGrid = ({ notes = [] }) => {
+const NotesGrid = ({ notes = [], onDelete }) => {
   return (
     <div className="notes-grid">
       {notes.map((note) => (
-        <NoteCard key={note._id} note={note} />
+        <NoteCard key={note._id} note={note} onDelete={onDelete} />
       ))}
     </div>
   );

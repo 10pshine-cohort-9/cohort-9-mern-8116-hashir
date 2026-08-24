@@ -5,7 +5,10 @@ import Header from "../components/Header";
 import NotesGrid from "../components/NotesGrid";
 import CreateNote from "../components/CreateNote";
 import { getNotes } from "../services/note.api";
+import { useAuth } from "../../auth/hooks/useAuth";
+
 export const NotePage = () => {
+  const { user } = useAuth();
   const [notes, setNotes] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,12 @@ export const NotePage = () => {
     fetchNotes();
   }, []);
 
+  const handleNoteDelete = (deletedNoteId) => {
+    setNotes((currentNotes) =>
+      currentNotes.filter((note) => note._id !== deletedNoteId),
+    );
+  };
+
   const filteredNotes = notes.filter((note) => {
     const query = searchQuery.toLowerCase().trim();
 
@@ -41,33 +50,66 @@ export const NotePage = () => {
     );
   });
 
+  const getGreetings = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return "Good Morning";
+    }
+    if (hour < 18) {
+      return "Good Afternoon";
+    }
+    return "Good Evening";
+  };
+
+  const displayName = user?.username || "there";
   return (
     <div className="notes-page">
       <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
       <main className="dashboard">
-        <section className="notes-section">
-          <div className="notes-heading">
-            <h1>My Notes</h1>
+        <section className="dashboard-content">
+          {/* Welcome */}
+          <div className="dashboard-welcome">
+            <div>
+              <span className="dashboard-eyebrow">Note Library</span>
+
+              <h1>
+                {getGreetings()}, {displayName}
+              </h1>
+
+              <p>Capture your thoughts and keep your ideas organized.</p>
+            </div>
           </div>
-          {loading && <p>Loading notes...</p>}
-          {error && <p>{error}</p>}
-          {!loading && !error && <NotesGrid notes={filteredNotes} />}
-        </section>
-        <aside className="notes-intro">
-          <div className="intro-content">
-            <span className="intro-label">NOTEAPP</span>
-            <h2>
-              All your notes
-              <br />
-              <span>orgainized and easy to find. </span>
-            </h2>
-            <p className="intro-qoute">
-              "Capture ideas, origanize thoughts, and never lose what matters."
-            </p>
+
+          {/* Notes Header */}
+          <div className="notes-heading">
+            <div>
+              <h2>My Notes</h2>
+
+              <p>
+                {filteredNotes.length === 0
+                  ? "No notes yet"
+                  : `${filteredNotes.length} ${
+                      filteredNotes.length === 1 ? "note" : "notes"
+                    } in your workspace`}
+              </p>
+            </div>
+
             <CreateNote />
           </div>
-        </aside>
+
+          {/* Notes */}
+          <div className="notes-content">
+            {loading && <p>Loading notes...</p>}
+
+            {error && <p>{error}</p>}
+
+            {!loading && !error && (
+              <NotesGrid notes={filteredNotes} onDelete={handleNoteDelete} />
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
